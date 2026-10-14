@@ -1,0 +1,37 @@
+name: Dongdong
+options:
+  bundleIdPrefix: com.kobosh
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+packages:
+  Compatibility:
+    path: .
+targets:
+  Dongdong:
+    type: application
+    platform: iOS
+    sources:
+      - App
+    dependencies:
+      - package: Compatibility
+        product: CompatibilityCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kobosh.dongdong
+        PRODUCT_NAME: Dongdong
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: dongdong
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+schemes:
+  Dongdong:
+    build:
+      targets:
+        Dongdong: all

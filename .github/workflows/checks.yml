@@ -1,0 +1,23 @@
+name: Checks
+on:
+  push:
+    branches: [main, kat/ui-checker]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
+      - run: swift build -c release
+  ios:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: swift test
+      - run: xcodegen generate
+      - run: xcodebuild -project Dongdong.xcodeproj -scheme Dongdong -sdk iphonesimulator -configuration Debug -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
