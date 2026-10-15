@@ -1,30 +1,43 @@
-dongdong is a minimal native SwiftUI iOS app that displays the detected OS version and system build. It has one permanently disabled, no-op “Replace file” placeholder. It cannot replace files.
+dongdong is a native SwiftUI iOS app that shows your OS version, system build, and whether they match the iOS 27.0 developer beta 1–4 compatibility policy.
 
-The compatibility policy requires exactly iOS 27.0.0 and one of the task-specified developer beta builds. Beta 1 is `24A5355q`, beta 2 is `24A5370h`, beta 3 is `24A5380h`, and beta 4 is `24A5390f`. Any other version or build is unsupported. An unreadable build fails closed. “Supported” means only that the version/build tuple matches this allowlist, not that any operation or device capability has been tested.
+Injection is intentionally not implemented. The “Replace file” button is permanently disabled, its action does nothing, and `inject()` is an empty function with no callers. This app cannot replace files.
 
-The app reads `ProcessInfo.operatingSystemVersion` and `kern.osversion` through read-only `sysctlbyname` calls. It has no file selection, file replacement, payload, private-framework bridge, target container, network request, or special entitlement. The placeholder remains disabled even when the allowlist matches.
+The checker requires exactly iOS 27.0.0 and one of these task-specified builds. Beta 1 uses `24A5355q`, beta 2 uses `24A5370h`, beta 3 uses `24A5380h`, and beta 4 uses `24A5390f`. These identifiers define the requested allowlist; they are not independently verified Apple release metadata. “Supported” means the version and build match, not that injection or any other device capability works.
 
-The source is independently written for this limited UI/checker scope. No implementation was copied from another project. The existing [MIT license](LICENSE) is unchanged.
+The app reads the version through `ProcessInfo` and the build through read-only `kern.osversion` queries. Unknown, malformed, or unreadable builds fail closed. There is no file picker, payload, private-framework bridge, network request, or special entitlement.
 
-Run the core tests with Swift 6.0 or later on Linux or macOS.
+To build the app, use a Mac with Xcode and an iOS 26 SDK or newer, Swift 6.0 or newer, and XcodeGen. The deployment target is iOS 26.0 so unsupported versions can still show a result. The core checker also builds and runs its tests on Linux with Swift 6.0 or newer.
+
+Clone the repository and generate the Xcode project.
 
 ```sh
-swift test
-swift build -c release
+git clone https://github.com/koboshchan/dongdong.git
+cd dongdong
+brew install xcodegen
+xcodegen generate
+open Dongdong.xcodeproj
 ```
 
-Build the iOS app with an iOS 26 SDK or newer and [XcodeGen](https://github.com/yonaskolb/XcodeGen). The project uses Swift 6 language mode and targets iOS 26.0 or later so unsupported OS versions can still display a result.
+Choose the Dongdong scheme and an iOS simulator, then run it in Xcode. For a physical device, select your own signing team under Signing & Capabilities, choose your connected device, and run. No signing credentials or prebuilt installation package are included.
+
+For a compile-only simulator check without signing or launching a simulator, run this from the repository root.
 
 ```sh
-xcodegen generate
 xcodebuild -project Dongdong.xcodeproj -scheme Dongdong \
   -sdk iphonesimulator -configuration Debug \
   -destination 'generic/platform=iOS Simulator' \
   CODE_SIGNING_ALLOWED=NO build
 ```
 
-Open the generated project in Xcode and choose your own signing team to run on a device. No signing credentials are included.
+Run the checker tests and release build on macOS or Linux.
 
-`Sources/CompatibilityCore` contains the allowlist and system reader. `Tests/CompatibilityCoreTests` covers each allowed build, exact-version rejection, malformed or unknown builds, unreadable builds, decoding failures, and Linux fail-closed behavior. `App` contains the SwiftUI form. GitHub Actions runs the package checks on Linux and compiles the iOS app on a hosted Mac without launching a simulator.
+```sh
+swift test
+swift build -c release
+```
 
-The reader follows Apple's [ProcessInfo documentation](https://developer.apple.com/documentation/foundation/processinfo/operatingsystemversion) and [sysctl manual](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/sysctl.3.html). Build identifiers are a requested policy, not independently verified Apple release metadata.
+The tests cover every allowlisted build, exact-version matching, unknown and unreadable builds, malformed build decoding, snapshot values, and Linux fail-closed behavior. GitHub Actions runs the package tests and Linux release build, plus package tests and a native iOS simulator compile on macOS. There is no dedicated iOS UI or runtime test target.
+
+`App/` contains the SwiftUI app, compatibility screen, and empty injection placeholder. `Sources/CompatibilityCore/` holds the compatibility policy and system readers. `Tests/CompatibilityCoreTests/` holds the checker tests. `project.yml` defines the XcodeGen project, and `.github/workflows/checks.yml` defines CI.
+
+Created by Lucas ([koboshchan](https://github.com/koboshchan)). Licensed under the [MIT license](LICENSE).
